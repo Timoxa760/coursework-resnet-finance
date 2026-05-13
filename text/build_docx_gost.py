@@ -64,9 +64,29 @@ def set_paragraph_format(
     pf.widow_control = True
 
 
+def remove_hyperlinks(doc: Document):
+    """Удаляет все гиперссылки из документа, оставляя обычный текст."""
+    logger.info("Удаление гиперссылок...")
+    from docx.oxml import OxmlElement
+    from copy import deepcopy
+
+    for paragraph in doc.paragraphs:
+        p = paragraph._element
+        hyperlinks = p.findall(qn("w:hyperlink"))
+        for hyperlink in hyperlinks:
+            # Копируем все run'ы из гиперссылки прямо в параграф
+            for child in list(hyperlink):
+                p.insert(list(p).index(hyperlink), child)
+            p.remove(hyperlink)
+    logger.info("Гиперссылки удалены")
+
+
 def apply_gost_styles(doc: Document):
     """Применяет стили ГОСТ ко всем элементам документа."""
     logger.info("Применение стилей ГОСТ...")
+
+    # Удаляем гиперссылки
+    remove_hyperlinks(doc)
 
     # Настройка полей страницы
     for section in doc.sections:
